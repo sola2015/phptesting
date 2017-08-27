@@ -10,7 +10,7 @@ if ($_SESSION['userstatus'] != 1 or $_SESSION['username'] == null) {//if the use
 }
 
 include('setting/startup.php');
-$page_no = 2;
+$page_no = 5;
 
 ?>
 
@@ -73,8 +73,10 @@ $page_no = 2;
 <!--Start body content-->
 
 <div class="container">
+    <h1>Curriculum Admin</h1>
+
     <div class="row">
-        <h1>News Admin</h1>
+
         <div class="col-md-3">
 
 
@@ -84,17 +86,34 @@ $page_no = 2;
 
                 $title = mysqli_real_escape_string($dbc, $_POST['title']);
                 $content = mysqli_real_escape_string($dbc, $_POST['content']);
+                $push = $_POST['push'];
                 if ($_POST['date'] == null) {
                     $date = date('Y-m-d');
                 } else {
                     $date = $_POST['date'];
                 }
 
+                if ($push == null) {
 
-                if ($_GET['id'] == 0) {
-                    $q = "INSERT INTO news (title, date, content) VALUES('$title', '$date', '$content')";
+                    if ($_GET['id'] == 0) {
+                        $q = "INSERT INTO curriculum (title, date, content) VALUES('$title', '$date', '$content')";
+                    } else {
+                        $q = "UPDATE curriculum SET title = '$title', date = '$date', content = '$content' WHERE id = $_GET[id]";
+                    }
+
+
                 } else {
-                    $q = "UPDATE news SET title = '$title', date = '$date', content = '$content' WHERE id = $_GET[id]";
+
+                    $q2 = "UPDATE curriculum SET push = '0' WHERE push = '1'";
+                    $r2 = mysqli_query($dbc, $q2);
+
+                    if ($_GET['id'] == 0) {
+                        $q = "INSERT INTO curriculum (title, date, content, push) VALUES('$title', '$date', '$content', '1')";
+                    } else {
+                        $q = "UPDATE curriculum SET title = '$title', date = '$date', content = '$content', push = '1' WHERE id = $_GET[id]";
+                    }
+
+
                 }
 
                 $r = mysqli_query($dbc, $q);
@@ -109,7 +128,7 @@ $page_no = 2;
 #DELETE
             } elseif ($_POST['submitted'] == 2) {
 
-                $q = "DELETE FROM news WHERE id = $_POST[id]";
+                $q = "DELETE FROM curriculum WHERE id = $_POST[id]";
                 $r = mysqli_query($dbc, $q);
 
             }
@@ -118,8 +137,8 @@ $page_no = 2;
 
             <div class="list-group">
 
-                <!--            id=0 means adding new page-->
-                <a class="list-group-item" href="news.php?id=0">
+                <!--id=0 means adding new page-->
+                <a class="list-group-item" href="curriculum.php?id=0">
 
                     <h4 class="list-group-item-heading"><i class="fa fa-plus"></i>New page</h4>
 
@@ -128,8 +147,8 @@ $page_no = 2;
 
                 <?php
 
-                #Start listing all the news from database
-                $q = "SELECT * FROM news ORDER BY DATE DESC";
+                #Start listing all from database
+                $q = "SELECT * FROM curriculum ORDER BY DATE DESC";
                 $r = mysqli_query($dbc, $q);
 
                 while ($page_list = mysqli_fetch_assoc($r)) {
@@ -138,7 +157,7 @@ $page_no = 2;
 
                     ?>
 
-                    <a href="news.php?id=<?php echo $page_list['id']; ?>" class="list-group-item
+                    <a href="curriculum.php?id=<?php echo $page_list['id']; ?>" class="list-group-item
                 <?php if ($page_list['id'] == $_GET['id']) {
                         echo 'active';
                     } ?>">
@@ -146,13 +165,9 @@ $page_no = 2;
                         <h4 class="list-group-item-heading"><?php echo $page_list['title']; ?></h4>
 
                         <p class="list-group-item-text"><?php echo $blurb; ?></p>
-
                     </a>
-
                 <?php } ?>
-
             </div>
-
         </div>
 
         <div class="col-md-8">
@@ -165,7 +180,7 @@ $page_no = 2;
 
             if (isset($_GET['id'])) {
 
-                $q = "SELECT * FROM news WHERE id = $_GET[id]";
+                $q = "SELECT * FROM curriculum WHERE id = $_GET[id]";
                 $r = mysqli_query($dbc, $q);
 
                 $opened = mysqli_fetch_assoc($r);
@@ -174,7 +189,7 @@ $page_no = 2;
 
             ?>
 
-            <form action="news.php?id=<?php
+            <form action="curriculum.php?id=<?php
             if ($opened['id'] == '') {
                 $opened['id'] = 0;
             }
@@ -188,24 +203,27 @@ $page_no = 2;
                     <input class="form-control" type="text" name="title" id="title"
                            value="<?php echo $opened['title']; ?>"
                            placeholder="Page Title">
-
                 </div>
 
-
                 <div class="form-group">
-
                     <label for="date">Updated Date:</label>
                     <input class="form-control" type="date" name="date" id="date"
                            value="<?php echo $opened['date']; ?>" placeholder="Keep blank if the date is today">
-
+                </div>
+                <div class="form-group">
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" name="push" value="1" <?php if ($opened['push'] == 1) {
+                                echo 'checked';
+                            } ?>> Push to Curriculum main page
+                        </label>
+                    </div>
                 </div>
 
                 <div class="form-group">
-
                     <label for="content">Content:</label>
                     <textarea class="form-control editor" name="content" id="content" rows="8"
-                              placeholder="News content"><?php echo $opened['content']; ?></textarea>
-
+                              placeholder="Main content"><?php echo $opened['content']; ?></textarea>
                 </div>
 
                 <!--            SAVE button-->
@@ -217,7 +235,7 @@ $page_no = 2;
 
             <!--        DELETE button-->
             <div class="pull-right">
-                <form action="news.php?id=<?php echo $opened['id']; ?>" method="post">
+                <form action="curriculum.php?id=<?php echo $opened['id']; ?>" method="post">
 
                 <button class="btn btn-danger <?php
                 if ($_GET['id'] == 0 or $_SESSION['userstatus'] != 1) {
@@ -225,14 +243,10 @@ $page_no = 2;
                 }
                 ?>" onclick="javascript:return del()"><i class="fa fa-trash-o"></i></button>
                 <input type="hidden" name="submitted" value="2">
-                <input type="hidden" name="id" value="<?php echo $opened['id']; ?>">
+                <input type="hidden" name="id" value="<?php echo $opened['id'];?>">
                 </form>
             </div>
-
-
         </div>
-
-
     </div>
 </div>
 <!--End Body Content-->

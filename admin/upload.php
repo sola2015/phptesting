@@ -21,9 +21,10 @@ if (1)//这个地方可以填写上传文件的限制，比如格式大小要求
         //自定义文件名称
         $array = $_FILES["file"]["type"];
         $array = explode("/", $array);
-        $newfilename = time();//自定义文件名（测试的时候中文名会操作失败）
+        $newfilename = time();//自定义文件名
         $_FILES["file"]["name"] = $newfilename . "." . $array[1];
         $file_name_full = "../images/" . $newfilename . "." . $array[1];
+        $id = $_POST['id'];
 
 //        if (!is_dir("upload/".$_SESSION["userid"]))//当路径不穿在
 //        {
@@ -38,10 +39,10 @@ if (1)//这个地方可以填写上传文件的限制，比如格式大小要求
             $url = $url . $_FILES["file"]["name"];
             move_uploaded_file($_FILES["file"]["tmp_name"], $url);
 
-            $q = "UPDATE resources SET cover = '$file_name_full' WHERE id = $_POST[id]";
+            $q = "UPDATE resources SET cover = '$file_name_full' WHERE id = $id";
             $r = mysqli_query($dbc, $q);
 
-            $go_to_location = "resources.php?id=" . $_POST['id'];
+            $go_to_location = "resources.php?id=" . $id;
             header("Location: $go_to_location");
         }
     }

@@ -16,6 +16,7 @@ if ($_POST) {
 
         $_SESSION['username'] = $s['email'];
         $_SESSION['userstatus'] = $s['status'];
+        $_SESSION['userid'] = $s['id'];
         header('Location: index.php');
 
     }
@@ -38,7 +39,6 @@ if ($_POST) {
 </head>
 <body>
 
-<?php //include(D_TEMPLATE . '/navigation.php')//main navigation;?>
 
 <div class="container">
 

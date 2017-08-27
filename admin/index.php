@@ -4,11 +4,12 @@
 session_start();
 
 # Check if the user is admin
-if ($_SESSION['userstatus'] != 1) {//if the user is not an admin, go to login.php
+if ($_SESSION['userstatus'] != 1 or $_SESSION['username'] == null) {//if the user is not an admin, go to login.php
     header('Location: login.php');
 }
 
-include('./setting/startup.php');
+include('setting/startup.php');
+$page_no = 1;
 
 ?>
 
@@ -30,12 +31,22 @@ include('./setting/startup.php');
 
 <nav class="nav navbar-default" role="navigation">
     <ul class="nav navbar-nav">
-        <li class="active"><a href="index.php">Personal Detail</a></li>
-        <li><a href="news.php?id=0">News</a></li>
-        <li><a href="events.php">Events</a></li>
-        <li><a href="resources.php">Resources</a></li>
-        <li><a href="mem_admin.php">Manage Members</a></li>
-        <li><a href="contact.php">Contact</a></li>
+        <?php
+
+        $q3 = "SELECT * FROM pages";
+        $r3 = mysqli_query($dbc, $q3);
+
+        while ($menu = mysqli_fetch_assoc($r3)) {
+            ?>
+
+            <li class="<?php if ($menu['id'] == $page_no) {
+                echo 'active';
+            } ?>">
+                <a href="<?php echo $menu['url']; ?>"><?php echo $menu['title']; ?></a>
+            </li>
+
+        <?php } ?>
+
     </ul>
 
     <div class="pull-right">
@@ -57,158 +68,232 @@ include('./setting/startup.php');
 <!--End nav-->
 
 <!--Start body content-->
-<h1>Personal Detail</h1>
+<div class="container">
+    <h1>Personal Detail</h1>
 
-<div class="row">
+    <?php
+    #UPDATE profile
+    switch ($_POST['submitted']) {
 
-    <div class="col-md-3">
+        case 1: {
+            $fname = mysqli_real_escape_string($dbc, $_POST['fname']);
+            $lname = mysqli_real_escape_string($dbc, $_POST['lname']);
+            $dob = mysqli_real_escape_string($dbc, $_POST['dob']);
+            $phone = mysqli_real_escape_string($dbc, $_POST['phone']);
+            $street = mysqli_real_escape_string($dbc, $_POST['street']);
+            $suburb = mysqli_real_escape_string($dbc, $_POST['suburb']);
+            $state = mysqli_real_escape_string($dbc, $_POST['state']);
+            $zip = mysqli_real_escape_string($dbc, $_POST['zip']);
+            $qualify = mysqli_real_escape_string($dbc, $_POST['qualify']);
 
+            $q = "UPDATE users SET first = '$fname', last = '$lname', dob = '$dob', phone = '$phone', street = '$street', suburb = '$suburb', state = '$state', zip = '$zip', qualify = '$qualify' WHERE id = $_SESSION[userid]";
+
+            break;
+
+        }
+
+        case 2: {
+
+
+        }
+
+
+    }
+
+    $r = mysqli_query($dbc, $q);
+
+    if ($r) {
+        $message = '<p>Updated!</p>';
+
+    } else {
+        $message = '<p>' . mysqli_error($dbc);
+        $message .= '<p>' . $q . '</p>';
+    }
+
+    if (isset($message)) {
+        echo $message;
+    }
+
+    ?>
+
+
+<!--main content-->
+
+    <div class="col-md-7">
 
         <?php
-        #INSERT and UPDATE
-        if ($_POST['submitted'] == 1) {
-
-            $title = mysqli_real_escape_string($dbc, $_POST['title']);
-            $content = mysqli_real_escape_string($dbc, $_POST['content']);
-            if ($_POST['date'] == null) {
-                $date = date('Y-m-d');
-            } else {
-                $date = $_POST['date'];
-            }
-
-
-            if ($_GET['id'] == 0) {
-                $q = "INSERT INTO news (title, date, content) VALUES('$title', '$date', '$content')";
-            } else {
-                $q = "UPDATE news SET title = '$title', date = '$date', content = '$content' WHERE id = $_GET[id]";
-            }
-
-            $r = mysqli_query($dbc, $q);
-
-            if ($r) {
-                $message = '<p>Updated!</p>';
-
-            } else {
-                $message = '<p>Error: ' . mysqli_error($dbc);
-                $message .= '<p>' . $q . '</p>';
-            }
-#DELETE
-        }elseif($_POST['submitted'] == 2){
-
-            $q = "DELETE FROM news WHERE id = $_GET[id]";
-            $r = mysqli_query($dbc, $q);
-
-        }
-
+        #Select user information from database
+        $q = "SELECT * FROM users LEFT JOIN user_status ON users.status = user_status.status WHERE users.id = $_SESSION[userid]";
+        $r = mysqli_query($dbc, $q);
+        $userDetail = mysqli_fetch_assoc($r);
         ?>
 
-        <div class="list-group">
+        <!--tab menu-->
+        <ul class="nav nav-tabs" id="myTab">
+            <li class="active"><a href="#profile">Profile</a></li>
+            <li><a href="#password">Password</a></li>
+            <li><a href="#member">Member Status</a></li>
+        </ul>
+
+        <!--tab content-->
+        <div class="tab-content">
+
+            <!--tab 1-->
+            <div class="tab-pane active" id="profile">
+                <br><br>
+
+                <form action="index.php" method="post" class="form-horizontal">
+                    <div class="form-group">
+                        <label for="fname" class="col-sm-3 control-label">First name</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" name="fname"
+                                   value="<?php echo $userDetail['first']; ?>" placeholder="Type here">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="lname" class="col-sm-3 control-label">Last name</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" name="lname"
+                                   value="<?php echo $userDetail['last']; ?>" placeholder="Type here">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="dob" class="col-sm-3 control-label">Date of birth</label>
+                        <div class="col-sm-9">
+                            <input type="date" class="form-control" name="dob" value="<?php echo $userDetail['dob']; ?>"
+                                   placeholder="Type here">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone" class="col-sm-3 control-label">Phone number</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" name="phone"
+                                   value="<?php echo $userDetail['phone']; ?>" placeholder="Type here">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="street" class="col-sm-3 control-label">Street</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" name="street"
+                                   value="<?php echo $userDetail['street']; ?>" placeholder="Type here">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="suburb" class="col-sm-3 control-label">Suburb</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" name="suburb"
+                                   value="<?php echo $userDetail['suburb']; ?>" placeholder="Type here">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="state" class="col-sm-3 control-label">State</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" name="state"
+                                   value="<?php echo $userDetail['state']; ?>" placeholder="Type here">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="zip" class="col-sm-3 control-label">Zip code</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" name="zip" value="<?php echo $userDetail['zip']; ?>"
+                                   placeholder="Type here">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="qualify" class="col-sm-3 control-label">Qualification</label>
+                        <div class="col-sm-9">
+                            <textarea type="text" rows="8" class="form-control" name="qualify"
+                                      placeholder="Type here"><?php echo $userDetail['qualify']; ?></textarea>
+                        </div>
+                    </div>
+                    <!--Save button-->
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <button type="submit" class="btn btn-default">Save</button>
+                            <input type="hidden" name="submitted" value="1">
+                            <input type="hidden" name="id" value="<?php echo $userDetail['id']; ?>">
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!--            tab 2-->
+            <div class="tab-pane" id="password">
+
+                <br><br>
+
+                <form action="chgpas.php" method="post" class="form-horizontal">
+                    <fieldset disabled>
+                    <div class="form-group">
+                        <label for="cemail" class="col-sm-3 control-label">Email</label>
+                        <div class="col-sm-9">
+                            <input type="email" class="form-control" name="cemail"
+                                   value="<?php echo $userDetail['email']; ?>" placeholder="Keep blank if not changing">
+                        </div>
+                    </div>
+                    </fieldset>
+                    <div class="form-group">
+                        <label for="npassword" class="col-sm-3 control-label">New Password</label>
+                        <div class="col-sm-9">
+                            <input type="password" class="form-control" name="npassword" id="npassword"
+                                   value="" placeholder="Keep blank if not changing">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="npassword2" class="col-sm-3 control-label">Confirm Password</label>
+                        <div class="col-sm-9">
+                            <input type="password" class="form-control" name="npassword2" id="npassword2"
+                                   value="" placeholder="Retype your new password here when changing">
+                        </div>
+                    </div>
+
+                    <!--Save button-->
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <button type="submit" class="btn btn-success" onclick="javascript:return check_pass()">Save</button>
+                            <input type="hidden" name="submitted" value="2">
+                            <input type="hidden" name="id" value="<?php echo $userDetail['id']; ?>">
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+
+            <!--tab 3-->
+            <div class="tab-pane" id="member">
+
+                <br><br>
+
+                <form class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Account type:</label>
+                        <div class="col-sm-9">
+                            <p class="form-control-static"><?php echo $userDetail['description'];?></p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label">Expire date:</label>
+                        <div class="col-sm-9">
+                            <p class="form-control-static">
+                                <?php
+                                if ($userDetail['expire'] == null){
+                                    echo 'Permanent';
+                                }else{
+                                    echo $userDetail['expire'];
+                                }
+                                ?></p>
+                        </div>
+                    </div>
+                </form>
 
 
-            <?php
 
-            #Start listing all the news from database
-            $q = "SELECT * FROM news ORDER BY DATE DESC";
-            $r = mysqli_query($dbc, $q);
-
-            while ($page_list = mysqli_fetch_assoc($r)) {
-
-                $blurb = substr(strip_tags($page_list['content']), 0, 30);
-
-                ?>
-
-                <a href="news.php?id=<?php echo $page_list['id']; ?>" class="list-group-item
-                <?php if ($page_list['id'] == $_GET['id']) {
-                    echo 'active';
-                } ?>">
-
-                    <h4 class="list-group-item-heading"><?php echo $page_list['title']; ?></h4>
-
-                    <p class="list-group-item-text"><?php echo $blurb; ?></p>
-
-                </a>
-
-            <?php } ?>
-
+            </div>
         </div>
 
-    </div>
-
-    <div class="col-md-8">
-
-        <?php
-
-        if (isset($message)) {
-            echo $message;
-        }
-
-        if (isset($_GET['id'])) {
-
-            $q = "SELECT * FROM news WHERE id = $_GET[id]";
-            $r = mysqli_query($dbc, $q);
-
-            $opened = mysqli_fetch_assoc($r);
-
-        }
-
-        ?>
-
-        <form action="news.php?id=<?php
-        if ($opened['id'] == '') {
-            $opened['id'] = 0;
-        }
-        echo $opened['id'];
-
-        ?>" method="post" role="form">
-
-            <div class="form-group">
-
-                <label for="title">Title:</label>
-                <input class="form-control" type="text" name="title" id="title" value="<?php echo $opened['title']; ?>"
-                       placeholder="Page Title">
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label for="date">Updated Date:</label>
-                <input class="form-control" type="text" name="date" id="date"
-                       value="<?php echo $opened['date']; ?>" placeholder="Keep blank if the date is today">
-
-            </div>
-
-            <div class="form-group">
-
-                <label for="content">Content:</label>
-                <textarea class="form-control editor" name="content" id="content" rows="8"
-                          placeholder="News content"><?php echo $opened['content']; ?></textarea>
-
-            </div>
-
-            <!--            SAVE button-->
-            <button type="submit" class="btn btn-default">SAVE</button>
-            <input type="hidden" name="submitted" value="1">
-            <input type="hidden" name="id" value="<?php echo $opened['id']; ?>">
-
-
-        </form>
-
-        <!--        DELETE button-->
-        <div class="pull-right">
-            <form action=""news.php?id=<?php echo $opened['id'];?>" method="post">
-
-            <button class="btn btn-danger <?php
-            if ($_GET['id'] == 0 or $_SESSION['userstatus'] != 1) {
-                echo 'hidden';
-            }
-            ?>" onclick="javascript:return del()" ><i class="fa fa-trash-o"></i></button>
-            <input type="hidden" name = "submitted" value="2">
-
-            </form>
-        </div>
 
     </div>
+    <!--    End side bar menu-->
 
 
 </div>
@@ -217,7 +302,7 @@ include('./setting/startup.php');
 <!--Start Footer-->
 <footer class="footer">
 
-    <p> Copyright © <?php echo date('Y');?> · All Rights Reserved · Victorian Association for Philosophy in Schools</p>
+    <p> Copyright © <?php echo date('Y'); ?> · All Rights Reserved · Victorian Association for Philosophy in Schools</p>
 
 </footer>
 <!--End Footer-->
