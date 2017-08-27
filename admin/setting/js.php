@@ -45,39 +45,63 @@
         }
     }
 
+    function update() {
+        var msg = "Are you sure you want to update your password?";
+        if (confirm(msg) == true) {
+            if (npassword.value != npassword2.value) {
+                alert("Passwords do not match!")
+                npassword.value = "";
+                npassword2.value = "";
+                return false;
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
 
-    function setImagePreview()
-    {
-        var docObj=document.getElementById("file");
-        var imgObjPreview=document.getElementById("preview");
-        if(docObj.files &&    docObj.files[0])
-        {
-            //火狐下，直接设img属性
+    function check_pass() {
+        var msg = "Are you sure you want to update your password?"
+        if (npassword.value != npassword2.value) {
+            alert("Passwords do not match!")
+            npassword.value = "";
+            npassword2.value = "";
+            return false;
+        } else if (confirm(msg) == true) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+    function setImagePreview() {
+        var docObj = document.getElementById("file");
+        var imgObjPreview = document.getElementById("preview");
+        if (docObj.files && docObj.files[0]) {
+            //firefox
             imgObjPreview.style.display = 'block';
-            imgObjPreview.style.width = '200px';
-            imgObjPreview.style.height = '200px';
+            imgObjPreview.style.width = '100%';
+            imgObjPreview.style.height = '100%';
             //imgObjPreview.src = docObj.files[0].getAsDataURL();
-            //火狐7以上版本不能用上面的getAsDataURL()方式获取，需要一下方式
+            //firefox 7
             imgObjPreview.src = window.URL.createObjectURL(docObj.files[0]);
         }
-        else
-        {
-            //IE下，使用滤镜
+        else {
+            //IE
             docObj.select();
             var imgSrc = document.selection.createRange().text;
             var localImagId = document.getElementById("localImag");
-            //必须设置初始大小
+            //initial size
             localImagId.style.width = "300px";
             localImagId.style.height = "120px";
-            //图片异常的捕捉，防止用户修改后缀来伪造图片
-            try
-            {
-                localImagId.style.filter="progid:DXImageTransform.Microsoft.AlphaImageLoader(sizingMethod=scale)";
+            //
+            try {
+                localImagId.style.filter = "progid:DXImageTransform.Microsoft.AlphaImageLoader(sizingMethod=scale)";
                 localImagId.filters.item("DXImageTransform.Microsoft.AlphaImageLoader").src = imgSrc;
             }
-            catch(e)
-            {
-                alert("您上传的图片格式不正确，请重新选择!");
+            catch (e) {
+                alert("It is not a valid picture format! Please try again.");
                 return false;
             }
             imgObjPreview.style.display = 'none';
@@ -85,6 +109,15 @@
         }
         return true;
     }
+
+    $(function () {
+        $('#myTab a:first').tab('show');//initial tab
+
+        $('#myTab a').click(function (e) {
+            e.preventDefault();//prevent a redirect
+            $(this).tab('show');//show the relevant content
+        })
+    })
 
 
 </script>
